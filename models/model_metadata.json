@@ -1,0 +1,31 @@
+{
+    "project": "LoanGuard AI",
+    "model_type": "XGBoost Classifier",
+    "threshold": 0.47,
+    "features": [
+        "person_age",
+        "person_income",
+        "person_home_ownership",
+        "loan_amnt",
+        "loan_intent",
+        "loan_percent_income",
+        "cb_person_cred_hist_length",
+        "credit_score",
+        "previous_loan_defaults_on_file"
+    ],
+    "versions": {
+        "xgboost": "3.4.1",
+        "scikit_learn": "1.6.1",
+        "joblib": "1.6.0",
+        "numpy": "2.1.3",
+        "pandas": "2.2.3"
+    },
+    "test_metrics": {
+        "accuracy": 0.90411,
+        "precision": 0.76381,
+        "recall": 0.823,
+        "f1_score": 0.7923,
+        "roc_auc": 0.96422,
+        "pr_auc": 0.90046
+    }
+}
