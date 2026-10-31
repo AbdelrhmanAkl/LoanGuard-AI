@@ -21,17 +21,18 @@ def matrix_matches_metrics() -> bool:
 
 
 def confusion_chart() -> go.Figure:
-    z = [[TN, FP], [FN, TP]]
+    """Correct predictions in teal, errors in muted red; cell text shows the real counts."""
+    counts = [[TN, FP], [FN, TP]]
     fig = go.Figure(go.Heatmap(
-        z=z, x=["Rejected", "Approved"], y=["Rejected", "Approved"], text=z,
-        texttemplate="%{text:,}", textfont=dict(size=20, color=ui.NAVY),
-        colorscale=[[0, "#F8FAFC"], [1, "#5EEAD4"]], showscale=False,
-        hovertemplate="Actual %{y}, predicted %{x}: %{z:,}<extra></extra>",
+        z=[[1, 0], [0, 1]], x=["Rejected", "Approved"], y=["Rejected", "Approved"], text=counts,
+        texttemplate="%{text:,}", textfont=dict(size=22, color=ui.NAVY),
+        colorscale=[[0, "#F9E3E3"], [1, "#CDEFE8"]], showscale=False, xgap=6, ygap=6,
+        hovertemplate="Actual %{y}, predicted %{x}: %{text:,}<extra></extra>",
     ))
     fig.update_layout(
         height=360, margin=dict(l=10, r=10, t=10, b=10), paper_bgcolor="rgba(0,0,0,0)",
-        xaxis=dict(title="Predicted", side="bottom"), yaxis=dict(title="Actual", autorange="reversed"),
-        font=dict(family="DM Sans, sans-serif", color=ui.MUTED),
+        xaxis=dict(title="Predicted"), yaxis=dict(title="Actual", autorange="reversed"),
+        font=dict(family="Plus Jakarta Sans, sans-serif", color=ui.MUTED),
     )
     return fig
 

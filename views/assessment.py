@@ -44,20 +44,22 @@ def friendly_errors(errors: list[str]) -> list[str]:
     return out
 
 
-def probability_chart(p: float, threshold: float, color: str) -> go.Figure:
-    fig = go.Figure()
-    fig.add_bar(x=[1], y=[""], orientation="h", marker_color="#E2E8F0", hoverinfo="skip")
-    fig.add_bar(x=[p], y=[""], orientation="h", marker_color=color,
-                hovertemplate="Approval probability: %{x:.2%}<extra></extra>")
-    fig.add_vline(x=threshold, line_width=2, line_color=ui.NAVY,
-                  annotation_text=f"Threshold {threshold:.0%}", annotation_position="top")
-    fig.update_layout(
-        barmode="overlay", showlegend=False, height=120, bargap=0.1,
-        margin=dict(l=0, r=0, t=34, b=0), paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(family="DM Sans, sans-serif", color=ui.MUTED),
-    )
-    fig.update_xaxes(range=[0, 1], tickformat=".0%", showgrid=False)
-    fig.update_yaxes(visible=False)
+def gauge(p: float, threshold: float, color: str) -> go.Figure:
+    """Gauge showing the exact model probability against the decision threshold."""
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number", value=p,
+        number={"valueformat": ".2%", "font": {"size": 40, "color": ui.NAVY}},
+        title={"text": "Approval probability", "font": {"size": 14, "color": ui.MUTED}},
+        gauge={
+            "axis": {"range": [0, 1], "tickvals": [0, .25, .5, .75, 1], "tickformat": ".0%",
+                     "tickfont": {"size": 11, "color": ui.MUTED}},
+            "bar": {"color": color, "thickness": 0.3}, "bgcolor": "#FFFFFF", "borderwidth": 0,
+            "steps": [{"range": [0, threshold], "color": "#FBEFEF"}, {"range": [threshold, 1], "color": "#E6F6F3"}],
+            "threshold": {"line": {"color": ui.NAVY, "width": 3}, "thickness": 0.9, "value": threshold},
+        },
+    ))
+    fig.update_layout(height=250, margin=dict(l=44, r=44, t=50, b=6), paper_bgcolor="rgba(0,0,0,0)",
+                      font=dict(family="Plus Jakarta Sans, sans-serif"))
     return fig
 
 
@@ -71,48 +73,53 @@ def render_result(result: dict) -> None:
           <div class="lg-verdict-title">{result['decision']}</div>
           <p>The model's estimated approval probability ({p:.2%}) is {relation} the {threshold:.0%} decision threshold.</p>
         </div>""")
-    st.plotly_chart(probability_chart(p, threshold, ui.TEAL if approved else ui.DANGER_MUTED),
+    st.plotly_chart(gauge(p, threshold, ui.TEAL if approved else ui.DANGER_MUTED),
                     width="stretch", config={"displayModeBar": False})
-    for col, (label, value) in zip(st.columns(3), [
-        ("Approval", f"{p:.2%}"), ("Rejection", f"{result['rejection_probability']:.2%}"),
-        ("Threshold", f"{threshold:.0%}"),
-    ]):
-        with col:
-            ui.metric_card(label, value)
+    st.caption(f"The dark marker shows the {threshold:.0%} decision threshold.")
+    ui.stats_row([("Approval", f"{p:.2%}"), ("Rejection", f"{result['rejection_probability']:.2%}"),
+                  ("Threshold", f"{threshold:.0%}")])
     ui.disclaimer()
 
 
-ui.header("Loan assessment", "New loan assessment",
-          "Answer eight short questions. Hover the (?) icons if you are unsure what a field means.")
+ui.header("Loan assessment", "Assess a loan application",
+          "Answer a few simple questions. Hover the (?) icons if you are unsure what a field means.")
 
-left, right = st.columns([3, 2], gap="large")
+left, right = st.columns([5, 4], gap="large")
 
 with left:
-    ui.section("1 · Applicant information")
-    c1, c2 = st.columns(2)
-    age = c1.number_input("Age", 18, 100, 28, 1, key="lg_in_age", help="Applicant's age in years (18-100).")
-    income = c2.number_input("Annual income ($)", 1, 10_000_000, 60_000, 1_000, key="lg_in_income",
-                             help="Total yearly income before tax.")
-    home = st.selectbox("Home ownership", list(HOME), format_func=HOME.get, key="lg_in_home",
-                        help="Current housing situation of the applicant.")
+    with st.container(border=True, key="card_applicant"):
+        ui.card_title(1, "Applicant")
+        c1, c2 = st.columns(2)
+        with c1:
+            age = st.slider("Age", 18, 100, 28, key="lg_in_age", help="Applicant's age in years.")
+        with c2:
+            income = st.number_input("Annual income ($)", 1, 10_000_000, 60_000, 1_000, format="%d",
+                                     key="lg_in_income", help="Total yearly income before tax.")
+        home = st.segmented_control("Home ownership", list(HOME), format_func=HOME.get, default="RENT",
+                                    key="lg_in_home", help="Current housing situation.") or "RENT"
 
-    ui.section("2 · Loan details")
-    c3, c4 = st.columns(2)
-    amount = c3.number_input("Requested loan amount ($)", 1, 10_000_000, 15_000, 500, key="lg_in_amount",
-                             help="How much the applicant wants to borrow.")
-    intent = c4.selectbox("Loan purpose", list(INTENT), format_func=INTENT.get, key="lg_in_intent",
-                          help="What the loan will be used for.")
+    with st.container(border=True, key="card_loan"):
+        ui.card_title(2, "Loan")
+        c3, c4 = st.columns(2)
+        with c3:
+            amount = st.number_input("Requested amount ($)", 1, 10_000_000, 15_000, 500, format="%d",
+                                     key="lg_in_amount", help="How much the applicant wants to borrow.")
+        with c4:
+            intent = st.selectbox("Purpose", list(INTENT), format_func=INTENT.get, key="lg_in_intent",
+                                  help="What the loan will be used for.")
 
-    ui.section("3 · Credit profile")
-    c5, c6 = st.columns(2)
-    history = c5.number_input("Credit history length (years)", 0, 100, 5, 1, key="lg_in_history",
-                              help="How many years the applicant has had credit.")
-    score = c6.number_input("Credit score", 300, 850, 680, 1, key="lg_in_score",
-                            help="Credit score on the 300-850 scale.")
-    defaults = st.selectbox("Previous loan defaults", ["No", "Yes"], key="lg_in_defaults",
-                            help="Has the applicant ever defaulted on a loan?")
+    with st.container(border=True, key="card_credit"):
+        ui.card_title(3, "Credit profile")
+        c5, c6 = st.columns(2)
+        with c5:
+            history = st.slider("Credit history (years)", 0, 50, 5, key="lg_in_history",
+                                help="How many years the applicant has had credit.")
+        with c6:
+            score = st.slider("Credit score", 300, 850, 680, key="lg_in_score",
+                              help="Credit score on the 300-850 scale.")
+        defaults = st.segmented_control("Previous loan defaults", ["No", "Yes"], default="No",
+                                        key="lg_in_defaults", help="Has the applicant ever defaulted on a loan?") or "No"
     st.caption("Amounts use the training dataset's currency units, shown as $.")
-    evaluate = st.button("Evaluate application", type="primary", width="stretch")
 
 ratio = amount / income  # derived feature, never entered manually
 data = {
@@ -122,18 +129,6 @@ data = {
     "previous_loan_defaults_on_file": defaults,
 }
 
-if evaluate:
-    errors = validate_application(data)
-    if errors:
-        st.session_state["lg_state"] = {"inputs": data, "errors": friendly_errors(errors)}
-    else:
-        try:
-            with left, st.spinner("Scoring application..."):
-                st.session_state["lg_state"] = {"inputs": data, "result": predict_loan(data)}
-        except Exception:
-            log.exception("Prediction failed")
-            st.session_state["lg_state"] = {"inputs": data, "failed": True}
-
 with right:
     warn = ('<div class="lg-metric-note" style="color:#B4474F">Loan exceeds annual income; '
             'the model supports 100% or less.</div>' if ratio > 1 else "")
@@ -142,10 +137,22 @@ with right:
             f'<div class="lg-metric-value">{ratio:.2%}</div>'
             f'<div class="lg-metric-note">{ui.money(amount)} requested against {ui.money(income)} annual income.</div>{warn}')
     st.write("")
+    if st.button("Evaluate application", type="primary", width="stretch"):
+        errors = validate_application(data)
+        if errors:
+            st.session_state["lg_state"] = {"inputs": data, "errors": friendly_errors(errors)}
+        else:
+            try:
+                with st.spinner("Scoring application..."):
+                    st.session_state["lg_state"] = {"inputs": data, "result": predict_loan(data)}
+            except Exception:
+                log.exception("Prediction failed")
+                st.session_state["lg_state"] = {"inputs": data, "failed": True}
+
     state = st.session_state.get("lg_state")
     if state is None:
         ui.card('<div class="lg-metric-label">No assessment yet</div>'
-                '<div class="lg-metric-note">Complete the form and select <strong>Evaluate application</strong> '
+                '<div class="lg-metric-note">Fill in the details and select <strong>Evaluate application</strong> '
                 'to see the model prediction here.</div>')
     elif state["inputs"] != data:
         st.info("Inputs changed since the last evaluation. Select Evaluate application to refresh.")

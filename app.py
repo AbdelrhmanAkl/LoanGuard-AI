@@ -6,7 +6,7 @@ st.set_page_config(
     page_title="LoanGuard AI | Smarter Risk Assessment",
     page_icon=":material/shield:",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",
 )
 
 from src.config import DECISION_THRESHOLD, MODEL_TYPE
@@ -28,8 +28,7 @@ navigation = st.navigation(PAGES, position="hidden")
 ui.inject_css()
 
 with st.sidebar:
-    ui.render('<div class="lg-brand">LoanGuard<span> AI</span></div>'
-              '<div class="lg-brand-sub">Smarter Risk Assessment</div>')
+    ui.brand()
     for page in PAGES:
         st.page_link(page)
     st.divider()

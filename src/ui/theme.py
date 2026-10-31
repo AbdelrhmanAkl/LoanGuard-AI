@@ -1,12 +1,12 @@
 """LoanGuard AI design system: tokens, global CSS and small HTML helpers.
 
-UI-only module. It never touches model, threshold or prediction logic.
+Fonts, primary colour, radii and borders come from .streamlit/config.toml.
+This module adds only what native theming cannot: cards, hero, stat rows.
+UI-only: it never touches model, threshold or prediction logic.
 """
 import streamlit as st
 
-# ---- Design tokens ---------------------------------------------------------
-NAVY, TEAL, TEAL_ACCENT = "#101828", "#0F766E", "#14B8A6"
-TEXT, MUTED, BORDER = "#172B4D", "#64748B", "#E2E8F0"
+NAVY, TEAL, MUTED = "#0F1B2D", "#0F766E", "#64748B"
 DANGER_MUTED = "#B4474F"
 
 DISCLAIMER = (
@@ -17,60 +17,92 @@ DISCLAIMER = (
 
 _CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
-.stApp, .stMarkdown, p, label, h1, h2, h3, h4, input, button, textarea {
-  font-family: 'DM Sans', sans-serif;
-}
-.stApp { background: #F7F9FC; color: #172B4D; }
-[data-testid="stHeader"] { background: transparent; }
-[data-testid="stSidebar"] { background: #FFFFFF; border-right: 1px solid #E2E8F0; }
-.block-container { max-width: 1180px; padding-top: 2.5rem; padding-bottom: 4rem; }
+.stApp { background: radial-gradient(1100px 480px at 8% -8%, #E4F5F2 0%, rgba(246,248,250,0) 62%), #F6F8FA; }
+[data-testid="stHeader"], [data-testid="stDecoration"] { background: transparent; }
 footer { visibility: hidden; }
+.block-container { max-width: 1160px; padding-top: 2.2rem; padding-bottom: 4rem; }
 
-.lg-brand { font-size: 22px; font-weight: 700; color: #101828; letter-spacing: -.5px; }
+/* sidebar */
+[data-testid="stSidebar"] { border-right: 1px solid #E8EDF3; }
+[data-testid="stPageLink-NavLink"] { border-radius: 12px; padding: .5rem .75rem; }
+[data-testid="stPageLink-NavLink"]:hover { background: #EEF8F6; }
+[data-testid="stPageLink-NavLink"][aria-current="page"] { background: #E3F4F1; color: #0F766E; font-weight: 600; }
+.lg-brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800;
+  color: #0F1B2D; letter-spacing: -.4px; }
 .lg-brand span { color: #0F766E; }
-.lg-brand-sub { font-size: 12px; color: #64748B; margin: 2px 0 18px; }
-.lg-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.6px;
-  text-transform: uppercase; color: #0F766E; margin-bottom: 10px; }
-.lg-title { font-size: clamp(30px, 4.2vw, 44px); font-weight: 700; color: #101828;
-  letter-spacing: -1.2px; line-height: 1.15; margin: 0; padding: 0; }
-.lg-lead { font-size: 16px; line-height: 1.7; color: #64748B; max-width: 680px; margin: 14px 0 22px; }
-.lg-section { font-size: 19px; font-weight: 700; color: #101828; margin: 8px 0 2px; }
-.lg-section-desc { font-size: 13.5px; color: #64748B; margin-bottom: 14px; }
-
-.lg-card { background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 14px;
-  padding: 18px 20px; box-shadow: 0 1px 2px rgba(16,24,40,.04); height: 100%; }
-.lg-metric-label { font-size: 12.5px; font-weight: 600; color: #64748B; }
-.lg-metric-value { font-size: 28px; font-weight: 700; color: #101828; letter-spacing: -.5px; margin: 4px 0; }
-.lg-metric-note { font-size: 12.5px; line-height: 1.5; color: #64748B; }
-.lg-step-num { width: 28px; height: 28px; border-radius: 8px; background: #F0FDFA; color: #0F766E;
-  font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-.lg-step-title { font-weight: 700; color: #101828; margin-bottom: 4px; }
-
-.lg-badge { display: inline-block; font-size: 12px; font-weight: 600; color: #0F766E;
-  background: #F0FDFA; border: 1px solid #99F6E4; border-radius: 999px; padding: 4px 12px; margin-bottom: 16px; }
-.lg-verdict { border-radius: 14px; padding: 20px 22px; margin-bottom: 8px; border: 1px solid; }
-.lg-verdict.ok { background: #F0FDFA; border-color: #99F6E4; color: #0F766E; }
-.lg-verdict.no { background: #FDF3F3; border-color: #F3D0D0; color: #B4474F; }
-.lg-verdict-title { font-size: 30px; font-weight: 700; letter-spacing: -.5px; margin: 2px 0 6px; }
-.lg-verdict p { color: #475569; font-size: 14px; line-height: 1.6; margin: 0; }
+.lg-logo { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center;
+  justify-content: center; background: linear-gradient(135deg, #0F766E, #14B8A6); }
+.lg-brand-sub { font-size: 12px; color: #64748B; margin: 6px 0 16px; }
 .lg-status { font-size: 12.5px; color: #475569; line-height: 1.7; }
 .lg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
-.lg-disclaimer { font-size: 12.5px; line-height: 1.65; color: #64748B; background: #F1F5F9;
-  border-radius: 10px; padding: 12px 14px; margin-top: 14px; }
 
-[data-baseweb="input"], [data-baseweb="select"] > div { border-radius: 10px; }
-[data-testid="stBaseButton-primary"] { background: #0F766E; border: 1px solid #0F766E;
-  border-radius: 10px; font-weight: 600; min-height: 46px; }
-[data-testid="stBaseButton-primary"]:hover { background: #115E59; border-color: #115E59; }
-[data-testid="stBaseButton-secondary"] { border-radius: 10px; }
+/* hero */
+.st-key-hero { background: linear-gradient(135deg, #0B1B33 0%, #0E3A44 62%, #0F766E 135%);
+  border-radius: 28px; padding: 3.2rem 3rem 2.8rem; position: relative; overflow: hidden;
+  box-shadow: 0 24px 60px rgba(11,27,51,.18); }
+.st-key-hero::after { content: ""; position: absolute; right: -90px; top: -90px; width: 380px; height: 380px;
+  border-radius: 50%; background: radial-gradient(circle, rgba(45,212,191,.28), rgba(45,212,191,0) 68%); pointer-events: none; }
+.lg-hero-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: #5EEAD4; margin-bottom: 14px; }
+.lg-hero-title { font-size: clamp(32px, 4.6vw, 52px); font-weight: 800; color: #FFFFFF !important; letter-spacing: -1.6px;
+  line-height: 1.1; margin: 0; padding: 0; }
+.lg-hero-lead { font-size: 16.5px; line-height: 1.7; color: #B7C7D8 !important; max-width: 620px; margin: 16px 0 24px; }
+.lg-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; }
+.lg-pill { font-size: 12.5px; font-weight: 600; color: #D6E4F0; background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.16); border-radius: 999px; padding: 6px 13px; }
+.st-key-hero [data-testid="stBaseButton-primary"] { background: #2DD4BF; border: none; color: #06302C;
+  font-weight: 700; padding: .7rem 1.6rem; }
+.st-key-hero [data-testid="stBaseButton-primary"]:hover { background: #5EEAD4; color: #06302C; }
+
+/* text blocks */
+.lg-eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: #0F766E; margin-bottom: 10px; }
+.lg-title { font-size: clamp(28px, 3.6vw, 38px); font-weight: 800; color: #0F1B2D !important; letter-spacing: -1px; line-height: 1.15; margin: 0; padding: 0; }
+.lg-lead { font-size: 15.5px; line-height: 1.7; color: #64748B; max-width: 640px; margin: 12px 0 22px; }
+.lg-section { font-size: 19px; font-weight: 700; color: #0F1B2D; margin: 14px 0 2px; }
+.lg-section-desc { font-size: 13.5px; color: #64748B; margin-bottom: 14px; }
+.lg-badge { display: inline-block; font-size: 12px; font-weight: 600; color: #0F766E; background: #E3F4F1;
+  border-radius: 999px; padding: 5px 13px; margin-bottom: 18px; }
+
+/* cards */
+.lg-card, [class*="st-key-card_"] { background: #FFFFFF; border: 1px solid #E8EDF3; border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(15,27,45,.04), 0 12px 32px rgba(15,27,45,.05); }
+.lg-card { padding: 20px 22px; height: 100%; }
+.lg-tall { min-height: 152px; }
+[class*="st-key-card_"] { padding: 1.1rem 1.3rem .6rem; }
+.lg-card-title { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: #0F1B2D; margin-bottom: 8px; }
+.lg-card-title span { width: 24px; height: 24px; border-radius: 8px; background: #E3F4F1; color: #0F766E;
+  font-size: 13px; display: flex; align-items: center; justify-content: center; }
+.lg-metric-label { font-size: 12.5px; font-weight: 600; color: #64748B; }
+.lg-metric-value { font-size: 30px; font-weight: 800; color: #0F1B2D; letter-spacing: -.8px; margin: 4px 0; white-space: nowrap; }
+.lg-metric-note { font-size: 13px; line-height: 1.55; color: #64748B; }
+.lg-step-num { width: 30px; height: 30px; border-radius: 10px; background: #E3F4F1; color: #0F766E; font-weight: 800;
+  font-size: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+.lg-step-title { font-weight: 700; color: #0F1B2D; margin-bottom: 4px; }
+
+/* result */
+.lg-verdict { border-radius: 20px; padding: 20px 22px; margin: 6px 0 10px; border: 1px solid; }
+.lg-verdict.ok { background: #EAF8F5; border-color: #BFEBE3; color: #0F766E; }
+.lg-verdict.no { background: #FCF1F1; border-color: #F2D5D5; color: #B4474F; }
+.lg-verdict-title { font-size: 32px; font-weight: 800; letter-spacing: -.8px; margin: 2px 0 6px; }
+.lg-verdict p { color: #475569; font-size: 14px; line-height: 1.6; margin: 0; }
+.lg-stats { display: flex; background: #FFFFFF; border: 1px solid #E8EDF3; border-radius: 18px; overflow: hidden; margin-top: 8px; }
+.lg-stat { flex: 1; padding: 14px 16px; border-right: 1px solid #EEF2F6; white-space: nowrap; }
+.lg-stat:last-child { border-right: none; }
+.lg-stat b { display: block; font-size: 20px; font-weight: 800; color: #0F1B2D; margin-top: 3px; }
+.lg-disclaimer { font-size: 12.5px; line-height: 1.65; color: #64748B; background: #EEF2F6; border-radius: 14px; padding: 12px 14px; margin-top: 14px; }
+
+[data-testid="stBaseButton-primary"] { font-weight: 700; min-height: 48px; }
 
 @media (max-width: 640px) {
-  .block-container { padding: 1.5rem 1rem 3rem; }
-  .lg-metric-value { font-size: 24px; }
+  .block-container { padding: 1.2rem 1rem 3rem; }
+  .st-key-hero { padding: 2rem 1.4rem; border-radius: 22px; }
+  .lg-stat { padding: 12px; } .lg-stat b { font-size: 17px; }
 }
 </style>
 """
+
+_LOGO = ('<div class="lg-logo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" '
+         'stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6z"/>'
+         '<path d="M8.5 12l2.5 2.5 4.5-5"/></svg></div>')
 
 
 def inject_css() -> None:
@@ -82,6 +114,11 @@ def render(markup: str) -> None:
     st.markdown(" ".join(l.strip() for l in markup.splitlines() if l.strip()), unsafe_allow_html=True)
 
 
+def brand() -> None:
+    render(f'<div class="lg-brand">{_LOGO}<div>LoanGuard<span> AI</span></div></div>'
+           '<div class="lg-brand-sub">Smarter Risk Assessment</div>')
+
+
 def header(eyebrow: str, title: str, lead: str = "") -> None:
     render(f'<div class="lg-eyebrow">{eyebrow}</div><h1 class="lg-title">{title}</h1>'
            + (f'<p class="lg-lead">{lead}</p>' if lead else ""))
@@ -91,18 +128,27 @@ def section(title: str, description: str = "") -> None:
     render(f'<div class="lg-section">{title}</div><div class="lg-section-desc">{description}</div>')
 
 
-def card(body: str) -> None:
-    render(f'<div class="lg-card">{body}</div>')
+def card_title(number: int, title: str) -> None:
+    render(f'<div class="lg-card-title"><span>{number}</span>{title}</div>')
+
+
+def card(body: str, tall: bool = False) -> None:
+    render(f'<div class="lg-card{" lg-tall" if tall else ""}">{body}</div>')
 
 
 def metric_card(label: str, value: str, note: str = "") -> None:
     card(f'<div class="lg-metric-label">{label}</div><div class="lg-metric-value">{value}</div>'
-         f'<div class="lg-metric-note">{note}</div>')
+         f'<div class="lg-metric-note">{note}</div>', tall=True)
 
 
 def step_card(number: int, title: str, body: str) -> None:
     card(f'<div class="lg-step-num">{number}</div><div class="lg-step-title">{title}</div>'
-         f'<div class="lg-metric-note">{body}</div>')
+         f'<div class="lg-metric-note">{body}</div>', tall=True)
+
+
+def stats_row(items: list[tuple[str, str]]) -> None:
+    cells = "".join(f'<div class="lg-stat"><span class="lg-metric-label">{l}</span><b>{v}</b></div>' for l, v in items)
+    render(f'<div class="lg-stats">{cells}</div>')
 
 
 def disclaimer() -> None:
