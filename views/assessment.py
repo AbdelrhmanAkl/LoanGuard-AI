@@ -81,6 +81,11 @@ def render_result(result: dict) -> None:
     ui.disclaimer()
 
 
+DEFAULTS = {"lg_in_age": 28, "lg_in_income": 60_000, "lg_in_home": "RENT", "lg_in_amount": 15_000,
+            "lg_in_intent": "PERSONAL", "lg_in_history": 5, "lg_in_score": 680, "lg_in_defaults": "No"}
+for _key, _value in DEFAULTS.items():
+    st.session_state.setdefault(_key, _value)
+
 ui.header("Loan assessment", "Assess a loan application",
           "Answer a few simple questions. Hover the (?) icons if you are unsure what a field means.")
 
@@ -91,18 +96,18 @@ with left:
         ui.card_title(1, "Applicant")
         c1, c2 = st.columns(2)
         with c1:
-            age = st.slider("Age", 18, 100, 28, key="lg_in_age", help="Applicant's age in years.")
+            age = st.slider("Age", min_value=18, max_value=100, key="lg_in_age", help="Applicant's age in years.")
         with c2:
-            income = st.number_input("Annual income ($)", 1, 10_000_000, 60_000, 1_000, format="%d",
+            income = st.number_input("Annual income ($)", min_value=1, max_value=10_000_000, step=1_000, format="%d",
                                      key="lg_in_income", help="Total yearly income before tax.")
-        home = st.segmented_control("Home ownership", list(HOME), format_func=HOME.get, default="RENT",
+        home = st.segmented_control("Home ownership", list(HOME), format_func=HOME.get,
                                     key="lg_in_home", help="Current housing situation.") or "RENT"
 
     with st.container(border=True, key="card_loan"):
         ui.card_title(2, "Loan")
         c3, c4 = st.columns(2)
         with c3:
-            amount = st.number_input("Requested amount ($)", 1, 10_000_000, 15_000, 500, format="%d",
+            amount = st.number_input("Requested amount ($)", min_value=1, max_value=10_000_000, step=500, format="%d",
                                      key="lg_in_amount", help="How much the applicant wants to borrow.")
         with c4:
             intent = st.selectbox("Purpose", list(INTENT), format_func=INTENT.get, key="lg_in_intent",
@@ -112,12 +117,12 @@ with left:
         ui.card_title(3, "Credit profile")
         c5, c6 = st.columns(2)
         with c5:
-            history = st.slider("Credit history (years)", 0, 50, 5, key="lg_in_history",
+            history = st.slider("Credit history (years)", min_value=0, max_value=50, key="lg_in_history",
                                 help="How many years the applicant has had credit.")
         with c6:
-            score = st.slider("Credit score", 300, 850, 680, key="lg_in_score",
+            score = st.slider("Credit score", min_value=300, max_value=850, key="lg_in_score",
                               help="Credit score on the 300-850 scale.")
-        defaults = st.segmented_control("Previous loan defaults", ["No", "Yes"], default="No",
+        defaults = st.segmented_control("Previous loan defaults", ["No", "Yes"],
                                         key="lg_in_defaults", help="Has the applicant ever defaulted on a loan?") or "No"
     st.caption("Amounts use the training dataset's currency units, shown as $.")
 
